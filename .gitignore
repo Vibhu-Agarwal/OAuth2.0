@@ -4,3 +4,4 @@ __pycache__/
 .vagrant/*
 .vagrant
 .vagrant/
+restaurant menu.db
