@@ -158,6 +158,7 @@ def showLogin():
 
 @app.route('/gconnect', methods = ['POST'])
 def gconnect():
+	print('gconnect function called in python')
 	#Checking for data forgery
 	if request.args.get('state') != login_session['state']:
 		response = make_response(json.dumps('Invalid State'), 401)
@@ -221,7 +222,7 @@ def gconnect():
 					answer = requests.get(user_info_url, params = params)
 
 					data = answer.json()
-					print(data)
+					print('-------> data', data)
 
 					login_session['username'] = data['name']
 					login_session['picture'] = data['picture']
@@ -236,6 +237,38 @@ def gconnect():
 					print('Done Loggin in!')
 					return output.format(username = login_session['username'], img_url = login_session['picture'])
 
+def resetLoginSession():
+	login_session['access_token'] = None
+	login_session['gplus_id'] = None
+	login_session['username'] = None
+	login_session['picture'] = None
+	login_session['email'] = None
+
+#DISCONNECT - Revoke the current user's token and reset their_login session
+@app.route('/gdisconnect')
+def gdisconnect():
+	access_token = login_session['access_token']
+	if access_token is None:
+		response = make_response(json.dumps('Curent user not connected'), 401)
+		response.headers['Content-Type'] = 'application/json'
+		return response
+	else:
+		#Execute HTTP GET request to revoke current token
+		url = 'https://accounts.google.com/o/oauth2/revoke?token={}'.format(access_token)
+		h = httplib2.Http()
+		req = h.request(url, 'GET')
+		result = req[0]
+		print('-------> req', req)
+		print('-------> result', result)
+		if result['status'] == '200':
+			resetLoginSession()
+			response = make_response(json.dumps('Successfully disconnected'), 200)
+			response.headers['Content-Type'] = 'application/json'
+			return response
+		else:
+			response = make_response(json.dumps('Failed to revoke token for the given user'), 400)
+			response.headers['Content-Type'] = 'application/json'
+			return response
 
 
 if __name__ == '__main__':

@@ -5,3 +5,4 @@ __pycache__/
 .vagrant
 .vagrant/
 restaurant menu.db
+client_secrets.json
